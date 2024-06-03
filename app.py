@@ -3,8 +3,9 @@ from flask import Flask, render_template, request, jsonify
 from crawling.urls import urls
 from search_and_rank import search
 from suggestion import suggestion as su
-import path as p 
+import path as p
 from matching import matching as m
+
 app = Flask(__name__)
 
 
@@ -19,18 +20,19 @@ def search_route():
     if request.method == 'POST':
         query = request.form['query']
         category = request.form['category']
+        top_result = []
         if not category:
             category = 'lotte'
-            m.Search_of_query(query,category) 
-        if not category:
+            m.Search_of_query(query, category)
+        if category == 'clinic' or category == 'lotte':
             category = 'clinic'
-            m.Search_of_query(query,category)
-            
+            top_result = m.Search_of_query(query, category)
+
         if query == "":
             return render_template("searchengine.html", pagetitle='Search Engine')
 
-        top_result = search(query, urls)
-
+        if category == 'crawling':
+            top_result = search(query, urls)
         if top_result is None:
             return render_template('notfound.html', pagetitle='Not Found')
         return render_template('results.html', data=top_result, pagetitle='search results')
@@ -53,6 +55,8 @@ def get_suggestions():
             return jsonify([]), 500
     else:
         return jsonify([])
+
+
 @app.route('/a')
 def a():
     return render_template("graph/a.html", pagetitle='a', image='images/a.jpg')
