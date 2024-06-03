@@ -17,17 +17,19 @@ def search_engine():
 def search_route():
     global top_result
     if request.method == 'POST':
-        top_result =[]
         query = request.form['query']
         category = request.form['category']
         if not category:
-            category = 'crawling'
-        if category == 'clinic' or category == 'lotte' :
-            top_result = m.Search_of_query(query,category)
+            category = 'lotte'
+            m.Search_of_query(query,category) 
+        if not category:
+            category = 'clinic'
+            m.Search_of_query(query,category)
+            
         if query == "":
             return render_template("searchengine.html", pagetitle='Search Engine')
-        if category == 'crawling' :
-            top_result = search(query, urls)
+
+        top_result = search(query, urls)
 
         if top_result is None:
             return render_template('notfound.html', pagetitle='Not Found')
