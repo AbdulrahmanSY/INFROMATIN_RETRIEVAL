@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block body %}
+    <div class="container">
+        <h1>Web Search Result</h1>
+        <form method="post" action="/search">
+            <select name="category" id="category-select">
+                <option value="Select">Select a category</option>
+                <option value="clinic">clinic 2017</option>
+                <option value="lotte">lotte forum</option>
+                <option value="crawling">Crawling</option>
+            </select>
+            <input type="text" name="query" placeholder="Enter your search query " value="{{ data[1] }}"
+                   id="query-input">
+            <div id="suggestions-container"></div>
+
+            <button type="submit">Search</button>
+        </form>
+        {% for item in data %}
+            <div class="results">
+                <div class="result">
+                    <h3>Result</h3>
+                    <a href="{{ item }}">{{ item }}</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <script>
+        let timeoutId;
+        let previousQuery = '';
+        const queryInput = document.getElementById('query-input');
+        const suggestionsContainer = document.getElementById('suggestions-container');
+
+        queryInput.addEventListener('input', async () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(async () => {
+                const query = queryInput.value;
+                if (query.length >= 3) {
+                    updateSuggestions(query);
+                } else {
+                    suggestionsContainer.innerHTML = '';
+                }
+            }, 1);
+        });
+
+        suggestionsContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('suggestion')) {
+                queryInput.value = event.target.textContent;
+                suggestionsContainer.innerHTML = '';
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!suggestionsContainer.contains(event.target)) {
+                suggestionsContainer.innerHTML = '';
+            }
+        });
+
+        async function updateSuggestions(query) {
+            const suggestions = await fetchSuggestions(query);
+            displaySuggestions(suggestions);
+            previousQuery = query;
+        }
+
+        function displaySuggestions(suggestions) {
+            suggestionsContainer.innerHTML = '';
+            const suggestionContainerElement = document.createElement('div');
+            suggestionContainerElement.classList.add('suggestion-container');
+
+            for (let i = 0; i < suggestions.length; i++) {
+                const suggestion = suggestions[i];
+                const suggestionElement = document.createElement('div');
+                suggestionElement.textContent = suggestion;
+                suggestionElement.classList.add('suggestion');
+                suggestionContainerElement.appendChild(suggestionElement);
+            }
+
+            suggestionsContainer.appendChild(suggestionContainerElement);
+            const rect = queryInput.getBoundingClientRect();
+            suggestionContainerElement.style.top = `${rect.bottom + 8}px`;
+            suggestionContainerElement.style.left = `${rect.left}px`;
+            suggestionContainerElement.style.width = `${rect.width}px`;
+        }
+
+        async function fetchSuggestions(query) {
+            const response = await fetch(`{{ url_for('get_suggestions') }}?query=${query}`);
+            return await response.json();
+        }
+
+    </script>
+{% endblock %}
